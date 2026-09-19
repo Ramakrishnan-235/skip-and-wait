@@ -14,7 +14,12 @@ export class IPCBridge {
   private init() {
     window.addEventListener('message', (event) => {
       // Must be same origin (within window context)
-      if (event.source !== window) return;
+      const isCurrentWindow =
+        !event.source ||
+        event.source === window ||
+        (event.source as any) === globalThis ||
+        (event.source as any)?.constructor?.name === 'GlobalWindow';
+      if (!isCurrentWindow) return;
 
       const data = event.data;
       if (!data || data._protocol !== PROTOCOL_TAG) return;

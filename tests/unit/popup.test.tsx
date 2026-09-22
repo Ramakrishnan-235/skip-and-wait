@@ -77,6 +77,7 @@ describe('Popup Dashboard React UI', () => {
     expect(container.textContent).toContain('File Hosting Gates');
     expect(container.textContent).toContain('Video Ad Acceleration');
     expect(container.textContent).toContain('Anti-Pause Tab Spoofing');
+    expect(container.textContent).toContain('Block YouTube Redirects');
   });
 
   it('toggles master power state between Active and Paused', async () => {
@@ -151,13 +152,18 @@ describe('Popup Dashboard React UI', () => {
     });
 
     const toggleItems = container.querySelectorAll<HTMLElement>('.toggle-item');
-    expect(toggleItems.length).toBe(4);
+    expect(toggleItems.length).toBe(5);
 
     // Click on Video Ad Acceleration toggle (index 2)
     await act(async () => {
       toggleItems[2]!.click();
     });
-
     expect(mockStorage['skip_and_wait_settings'].autoAccelerateVideoAds).toBe(false);
+
+    // Click on Block YouTube Redirects toggle (index 4)
+    await act(async () => {
+      toggleItems[4]!.click();
+    });
+    expect(mockStorage['skip_and_wait_settings'].blockYouTubeRedirects).toBe(false);
   });
 });

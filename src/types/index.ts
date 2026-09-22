@@ -7,6 +7,7 @@ export interface UserSettings {
   muteVideoAds: boolean;
   showToastNotification: boolean;
   antiPauseSpoofing: boolean;
+  blockYouTubeRedirects: boolean; // Auto-return when an external site redirects to YouTube
   whitelist: string[]; // List of domains where the extension is disabled
   blacklist: string[]; // List of domains where aggressive mode is enabled
 }

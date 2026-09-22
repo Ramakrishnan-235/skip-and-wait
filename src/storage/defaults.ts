@@ -9,6 +9,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   muteVideoAds: true,
   showToastNotification: true,
   antiPauseSpoofing: true,
+  blockYouTubeRedirects: true,
   whitelist: [],
   blacklist: [],
 };

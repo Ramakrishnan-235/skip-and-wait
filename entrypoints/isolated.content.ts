@@ -3,6 +3,7 @@ import { RecipeEngine } from '../src/recipes/engine';
 import { HeuristicSkipper } from '../src/core/engine/heuristic-skipper';
 import { showToast } from '../src/ui/toast';
 import { getSettings, recordBypass } from '../src/storage';
+import { checkAndHandleYouTubeRedirect } from '../src/core/engine/youtube-redirect-guard';
 
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -39,6 +40,17 @@ export default defineContentScript({
         });
       } catch {}
     };
+
+    // Check if redirected to YouTube from an external site, and auto-return if enabled
+    const wasRedirected = checkAndHandleYouTubeRedirect({
+      blockYouTubeRedirects: settings.blockYouTubeRedirects,
+      onBlock: (label, seconds) => {
+        handleBypassNotification(label, seconds);
+      },
+    });
+    if (wasRedirected) {
+      return;
+    }
 
     // 1. Listen for events from Main World stealth hooks
     bridge.on('TIMER_ACCELERATED', (payload: { secondsSaved: number }) => {

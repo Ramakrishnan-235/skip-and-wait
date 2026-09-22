@@ -10,7 +10,8 @@ import {
   Globe,
   CheckCircle2,
   ExternalLink,
-  Power
+  Power,
+  Undo2
 } from 'lucide-react';
 import type { UserSettings, SkipStats } from '../../src/types';
 import { DEFAULT_SETTINGS, DEFAULT_STATS } from '../../src/storage/defaults';
@@ -245,6 +246,27 @@ export default function App() {
               type="checkbox"
               checked={settings.antiPauseSpoofing}
               onChange={() => toggleFeature('antiPauseSpoofing')}
+            />
+            <span className="slider" />
+          </label>
+        </div>
+
+        <div
+          className="toggle-item"
+          onClick={() => toggleFeature('blockYouTubeRedirects')}
+        >
+          <div className="toggle-info">
+            <Undo2 size={15} color="#ef4444" />
+            <div>
+              <div className="toggle-title">Block YouTube Redirects</div>
+              <div className="toggle-desc">Auto-return if a site redirects to YouTube</div>
+            </div>
+          </div>
+          <label className="switch" onClick={(e) => e.stopPropagation()}>
+            <input
+              type="checkbox"
+              checked={settings.blockYouTubeRedirects}
+              onChange={() => toggleFeature('blockYouTubeRedirects')}
             />
             <span className="slider" />
           </label>

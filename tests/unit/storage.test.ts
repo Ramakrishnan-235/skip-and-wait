@@ -10,6 +10,7 @@ describe('Storage Defaults & Helpers', () => {
     expect(DEFAULT_SETTINGS.autoAccelerateVideoAds).toBe(true);
     expect(DEFAULT_SETTINGS.speedMultiplier).toBe(10);
     expect(DEFAULT_SETTINGS.antiPauseSpoofing).toBe(true);
+    expect(DEFAULT_SETTINGS.blockYouTubeRedirects).toBe(true);
     expect(Array.isArray(DEFAULT_SETTINGS.whitelist)).toBe(true);
   });
 

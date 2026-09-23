@@ -58,3 +58,13 @@ export interface IPCMessage<T = any> {
   type: IPCMessageType;
   payload?: T;
 }
+
+export interface ActiveConfigPayload {
+  enabled: boolean;
+  speedMultiplier: number;
+  autoAccelerateVideoAds: boolean;
+  muteVideoAds: boolean;
+  antiPauseSpoofing: boolean;
+  autoSkipShorteners: boolean;
+  isCurrentSiteEnabled: boolean;
+}

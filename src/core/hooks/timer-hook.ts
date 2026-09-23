@@ -1,9 +1,25 @@
 export interface TimerHookOptions {
   speedMultiplier: number;
+  enabled?: boolean;
   onAccelerate?: (originalDelay: number, scaledDelay: number) => void;
 }
 
+let activeOptions: TimerHookOptions = {
+  speedMultiplier: 10,
+  enabled: true,
+};
+
+export function updateTimerHookOptions(options: Partial<TimerHookOptions>) {
+  Object.assign(activeOptions, options);
+}
+
+export function getTimerHookOptions(): TimerHookOptions {
+  return { ...activeOptions };
+}
+
 export function patchTimerAPIs(options: TimerHookOptions) {
+  Object.assign(activeOptions, options);
+
   if ((window as any).__SKIP_AND_WAIT_TIMERS_PATCHED__) {
     return;
   }
@@ -31,20 +47,23 @@ export function patchTimerAPIs(options: TimerHookOptions) {
     const delay = typeof timeout === 'number' ? timeout : 0;
     let scaled = delay;
 
-    // Only scale delays > 150ms to avoid breaking essential UI micro-tasks and animations
-    if (delay > 150) {
-      scaled = Math.max(10, Math.floor(delay / options.speedMultiplier));
-      if (options.onAccelerate) {
-        options.onAccelerate(delay, scaled);
+    const isEnabled = activeOptions.enabled !== false;
+    const multiplier = Math.max(1, Math.min(100, activeOptions.speedMultiplier || 1));
+
+    // Only scale delays > 150ms when enabled and multiplier > 1
+    if (isEnabled && multiplier > 1 && delay > 150) {
+      scaled = Math.max(10, Math.floor(delay / multiplier));
+      if (activeOptions.onAccelerate) {
+        activeOptions.onAccelerate(delay, scaled);
       }
     }
 
     const timerId = (originalSetTimeout as any).call(
       window,
-      (targetArgs: any) => {
+      (...cbArgs: any[]) => {
         activeTimers.delete(timerId);
         if (typeof handler === 'function') {
-          handler(targetArgs);
+          handler(...cbArgs);
         } else {
           try {
             // Direct string handler fallback
@@ -70,10 +89,13 @@ export function patchTimerAPIs(options: TimerHookOptions) {
     const delay = typeof timeout === 'number' ? timeout : 0;
     let scaled = delay;
 
-    if (delay > 150) {
-      scaled = Math.max(25, Math.floor(delay / options.speedMultiplier));
-      if (options.onAccelerate) {
-        options.onAccelerate(delay, scaled);
+    const isEnabled = activeOptions.enabled !== false;
+    const multiplier = Math.max(1, Math.min(100, activeOptions.speedMultiplier || 1));
+
+    if (isEnabled && multiplier > 1 && delay > 150) {
+      scaled = Math.max(25, Math.floor(delay / multiplier));
+      if (activeOptions.onAccelerate) {
+        activeOptions.onAccelerate(delay, scaled);
       }
     }
 
@@ -117,3 +139,4 @@ export function patchTimerAPIs(options: TimerHookOptions) {
     activeTimers.clear();
   };
 }
+

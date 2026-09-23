@@ -11,6 +11,16 @@ export const EXCLUDED_REFERRER_PATTERNS: RegExp[] = [
   /(?:^|\.)instagram\.com$/i,
   /(?:^|\.)linkedin\.com$/i,
   /(?:^|\.)t\.co$/i,
+  /(?:^|\.)github\.com$/i,
+  /(?:^|\.)discord\.(?:com|gg)$/i,
+  /(?:^|\.)slack\.com$/i,
+  /(?:^|\.)whatsapp\.com$/i,
+  /(?:^|\.)telegram\.org$/i,
+  /(?:^|\.)t\.me$/i,
+  /(?:^|\.)wikipedia\.org$/i,
+  /(?:^|\.)twitch\.tv$/i,
+  /(?:^|\.)ycombinator\.com$/i,
+  /(?:^|\.)outlook\.(?:live|office)\.com$/i,
 ];
 
 export function isYouTubeHost(hostname: string): boolean {

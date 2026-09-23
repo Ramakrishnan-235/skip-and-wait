@@ -2,6 +2,7 @@ export class HeuristicSkipper {
   private observer: MutationObserver | null = null;
   private isThrottled = false;
   private bypassedElements = new WeakSet<Element>();
+  private pendingClickTimeouts = new Set<any>();
   private onBypassCallback?: (label: string, secondsSaved: number) => void;
 
   constructor(onBypass?: (label: string, secondsSaved: number) => void) {
@@ -62,21 +63,36 @@ export class HeuristicSkipper {
       }
     }
 
-    // 2. Disabled Countdown Buttons on Download & Shortener Pages
+    // 2. Countdown Buttons and Gate Elements on Download & Shortener Pages
     const potentialButtons = document.querySelectorAll<HTMLElement>(
-      'button[disabled], a.disabled, input[type="button"][disabled], input[type="submit"][disabled], [class*="countdown"], [id*="countdown"], [id*="download"], [class*="download"]'
+      'button, a.disabled, input[type="button"], input[type="submit"], [class*="countdown"], [id*="countdown"], [id*="download"], [class*="download"]'
     );
+
+    const countdownRegex = /\b(?:wait|seconds?|sec|\d+\s*s)\b/i;
+    const numberRegex = /\d+/;
+    const gateClassOrIdRegex = /(?:countdown|timer|download|gate|shortener)/i;
+    const unlockedActionRegex = /\b(?:download|get link|continue|skip|proceed|direct download)\b/i;
 
     potentialButtons.forEach((el) => {
       if (this.bypassedElements.has(el)) return;
 
       const text = (el.textContent || (el as HTMLInputElement).value || '').trim();
+      const classAndId = `${el.className || ''} ${el.id || ''}`;
+      const hasCountdownText = countdownRegex.test(text);
+      const isGateElement = gateClassOrIdRegex.test(classAndId);
 
-      // Check if element contains countdown patterns, e.g. "Wait 15s", "Please wait (10)", "Download in 5 sec"
-      const countdownRegex = /\b(?:wait|seconds?|sec|\d+\s*s)\b/i;
-      const numberRegex = /\d+/;
+      // Element must be verified as a countdown or download gate
+      if (!hasCountdownText && !isGateElement && !forceImmediateClick) {
+        return;
+      }
 
-      if (countdownRegex.test(text) || el.hasAttribute('disabled') || el.classList.contains('disabled')) {
+      // Check if disabled or has countdown pattern
+      const isDisabled =
+        el.hasAttribute('disabled') ||
+        el.classList.contains('disabled') ||
+        (el as HTMLButtonElement).disabled;
+
+      if (hasCountdownText || isDisabled || isGateElement) {
         let estimatedSeconds = 10;
         const match = text.match(numberRegex);
         if (match) {
@@ -89,6 +105,9 @@ export class HeuristicSkipper {
         // Remove disabled state
         el.removeAttribute('disabled');
         el.classList.remove('disabled');
+        if ('disabled' in el) {
+          (el as any).disabled = false;
+        }
         el.style.pointerEvents = 'auto';
         el.style.cursor = 'pointer';
 
@@ -99,22 +118,29 @@ export class HeuristicSkipper {
             this.onBypassCallback('Countdown Bypassed', estimatedSeconds);
           }
         } else {
-          // If countdown number reached 0 or button is an unlock button
-          if (text.includes('0') || !text.match(/\d+/) || forceImmediateClick) {
+          // Auto-click when countdown reaches 0 or an unlocked gate action appears
+          const isZeroCountdown = hasCountdownText && (text.includes('0') || /\b0\s*(?:s|sec|seconds?)\b/i.test(text));
+          const isUnlockedGate = isGateElement && unlockedActionRegex.test(text);
+
+          if (isZeroCountdown || isUnlockedGate) {
             this.bypassedElements.add(el);
-            setTimeout(() => {
+            const timeoutId = setTimeout(() => {
+              this.pendingClickTimeouts.delete(timeoutId);
               el.click();
               if (this.onBypassCallback) {
                 this.onBypassCallback('Unlocked & Clicked Button', estimatedSeconds);
               }
             }, 300);
+            this.pendingClickTimeouts.add(timeoutId);
           }
         }
       }
     });
 
     // 3. Remove Hidden / Overlay Blockers
-    const overlays = document.querySelectorAll<HTMLElement>('.modal-backdrop, [class*="overlay-timer"], [id*="timer_overlay"]');
+    const overlays = document.querySelectorAll<HTMLElement>(
+      '.modal-backdrop, [class*="overlay-timer"], [id*="timer_overlay"]'
+    );
     overlays.forEach((overlay) => {
       if (overlay && overlay.style.display !== 'none' && !this.bypassedElements.has(overlay)) {
         this.bypassedElements.add(overlay);
@@ -125,5 +151,9 @@ export class HeuristicSkipper {
 
   public stop() {
     this.observer?.disconnect();
+    this.observer = null;
+    this.pendingClickTimeouts.forEach((tid) => clearTimeout(tid));
+    this.pendingClickTimeouts.clear();
   }
 }
+

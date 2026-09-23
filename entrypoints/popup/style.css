@@ -336,3 +336,53 @@ input:checked + .slider:before {
   border-radius: 50%;
   background: #10b981;
 }
+
+/* Speed selector */
+.speed-selector-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  margin-top: 4px;
+}
+
+.speed-selector-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.speed-pills {
+  display: flex;
+  gap: 4px;
+}
+
+.speed-pill {
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.speed-pill:hover {
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.speed-pill.active {
+  background: var(--accent);
+  color: #0b0f19;
+  border-color: var(--accent);
+}
+

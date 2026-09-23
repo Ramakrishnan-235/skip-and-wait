@@ -142,4 +142,55 @@ describe('Media Hook Ad Acceleration', () => {
     patchMediaAPIs({ muteAds: false });
     expect(HTMLMediaElement.prototype.play).toBe(patchedPlay);
   });
+
+  it('does not falsely classify containers with substring "ad" (e.g. download, header, shadow) as ads', () => {
+    const downloadContainer = document.createElement('div');
+    downloadContainer.className = 'download-section-content';
+    const video = document.createElement('video');
+    Object.defineProperty(video, 'duration', { value: 25, writable: true });
+    video.currentTime = 0;
+    downloadContainer.appendChild(video);
+    document.body.appendChild(downloadContainer);
+
+    let accelerated = false;
+    patchMediaAPIs({
+      muteAds: true,
+      onAdAccelerated: () => {
+        accelerated = true;
+      },
+    });
+
+    video.play();
+    video.dispatchEvent(new Event('timeupdate'));
+
+    expect(video.playbackRate).toBe(1);
+    expect(video.muted).toBe(false);
+    expect(accelerated).toBe(false);
+  });
+
+  it('debounces onAdAccelerated callback across multiple timeupdate ticks', () => {
+    const adContainer = document.createElement('div');
+    adContainer.className = 'video-ads';
+    const video = document.createElement('video');
+    Object.defineProperty(video, 'duration', { value: 15, writable: true });
+    video.currentTime = 0;
+    adContainer.appendChild(video);
+    document.body.appendChild(adContainer);
+
+    let callCount = 0;
+    patchMediaAPIs({
+      muteAds: true,
+      onAdAccelerated: () => {
+        callCount++;
+      },
+    });
+
+    video.play();
+    video.dispatchEvent(new Event('timeupdate'));
+    video.dispatchEvent(new Event('timeupdate'));
+    video.dispatchEvent(new Event('timeupdate'));
+
+    expect(callCount).toBe(1);
+  });
 });
+

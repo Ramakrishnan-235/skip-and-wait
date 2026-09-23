@@ -166,4 +166,23 @@ describe('Popup Dashboard React UI', () => {
     });
     expect(mockStorage['skip_and_wait_settings'].blockYouTubeRedirects).toBe(false);
   });
+
+  it('updates speed multiplier setting when clicking speed pill buttons', async () => {
+    root = createRoot(container);
+    await act(async () => {
+      root.render(<App />);
+    });
+
+    const speedPills = container.querySelectorAll<HTMLButtonElement>('.speed-pill');
+    expect(speedPills.length).toBe(4); // 2x, 5x, 10x, 16x
+
+    // Click on 16x pill (index 3)
+    await act(async () => {
+      speedPills[3]!.click();
+    });
+
+    expect(mockStorage['skip_and_wait_settings'].speedMultiplier).toBe(16);
+    expect(speedPills[3]!.classList.contains('active')).toBe(true);
+  });
 });
+

@@ -32,11 +32,16 @@ export class RecipeEngine {
         let value = parsed.searchParams.get(param) || '';
         if (recipe.directExtract.decodeBase64) {
           try {
-            value = atob(value);
+            const sanitized = value.replace(/-/g, '+').replace(/_/g, '/');
+            value = atob(sanitized);
           } catch {
             // Not valid base64, keep raw string
           }
         }
+        try {
+          value = decodeURIComponent(value);
+        } catch {}
+
         if (value.startsWith('http://') || value.startsWith('https://')) {
           return value;
         }
@@ -46,7 +51,11 @@ export class RecipeEngine {
         const regex = new RegExp(recipe.directExtract.regexPattern, 'i');
         const match = currentUrl.match(regex);
         if (match && match[1]) {
-          return match[1];
+          let val = match[1];
+          try {
+            val = decodeURIComponent(val);
+          } catch {}
+          return val;
         }
       }
     } catch (e) {
@@ -98,6 +107,16 @@ export class RecipeEngine {
           );
         });
         return true;
+      }
+      case 'accelerate': {
+        if (el instanceof HTMLMediaElement) {
+          el.playbackRate = 16;
+          if (isFinite(el.duration) && el.duration > 0 && el.currentTime < el.duration - 0.2) {
+            el.currentTime = Math.max(0, el.duration - 0.1);
+          }
+          return true;
+        }
+        return false;
       }
       case 'redirect': {
         if (step.attributeSource) {

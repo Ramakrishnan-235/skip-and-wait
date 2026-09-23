@@ -188,4 +188,36 @@ describe('RecipeEngine and Recipe Catalogue', () => {
 
     expect(success).toBe(false);
   });
+
+  it('executes "accelerate" step on video media element', async () => {
+    const video = document.createElement('video');
+    video.id = 'ad-video';
+    Object.defineProperty(video, 'duration', { value: 20, writable: true });
+    video.currentTime = 0;
+    video.playbackRate = 1;
+    document.body.appendChild(video);
+
+    const success = await engine.executeStep({
+      action: 'accelerate',
+      targetSelector: '#ad-video',
+    });
+
+    expect(success).toBe(true);
+    expect(video.playbackRate).toBe(16);
+    expect(video.currentTime).toBeCloseTo(19.9, 1);
+  });
+
+  it('handles URL-safe base64 encoding (with - and _) in tryDirectExtract', () => {
+    const recipe = BUILTIN_RECIPES.find((r) => r.id === 'generic-query-redirect')!;
+    // Encode destination that produces base64 characters with + or /
+    const targetUrl = 'https://example.com/path?a=1&b=2';
+    const standardB64 = btoa(targetUrl);
+    // Replace with URL-safe variants
+    const urlSafeB64 = standardB64.replace(/\+/g, '-').replace(/\//g, '_');
+
+    const testUrl = `https://ouo.io/go?url=${urlSafeB64}`;
+    const extracted = engine.tryDirectExtract(recipe, testUrl);
+    expect(extracted).toBe(targetUrl);
+  });
 });
+

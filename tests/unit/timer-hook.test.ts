@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { patchTimerAPIs } from '../../src/core/hooks/timer-hook';
+import {
+  patchTimerAPIs,
+  updateTimerHookOptions,
+  getTimerHookOptions,
+} from '../../src/core/hooks/timer-hook';
 
 describe('Timer Hook Interception', () => {
   let originalSetTimeout: typeof setTimeout;
@@ -180,4 +184,70 @@ describe('Timer Hook Interception', () => {
     patchTimerAPIs({ speedMultiplier: 5 });
     expect(window.setTimeout).toBe(firstPatchedSetTimeout);
   });
+
+
+  it('forwards multiple variadic callback arguments without truncation', async () => {
+    patchTimerAPIs({ speedMultiplier: 10 });
+
+    const result = await new Promise<any[]>((resolve) => {
+      window.setTimeout(
+        (a: string, b: number, c: boolean) => {
+          resolve([a, b, c]);
+        },
+        200,
+        'arg1',
+        42,
+        true
+      );
+    });
+
+    expect(result).toEqual(['arg1', 42, true]);
+  });
+
+  it('dynamically updates speed multiplier and enabled state via updateTimerHookOptions', async () => {
+    patchTimerAPIs({ speedMultiplier: 5 });
+
+    updateTimerHookOptions({ speedMultiplier: 20 });
+    expect(getTimerHookOptions().speedMultiplier).toBe(20);
+
+    let capturedScaled = 0;
+    updateTimerHookOptions({
+      onAccelerate: (_, scaled) => {
+        capturedScaled = scaled;
+      },
+    });
+
+    window.setTimeout(() => {}, 400);
+    // 400 / 20 = 20
+    expect(capturedScaled).toBe(20);
+
+    // Disable scaling dynamically
+    updateTimerHookOptions({ enabled: false });
+    let acceleratedWhileDisabled = false;
+    updateTimerHookOptions({
+      onAccelerate: () => {
+        acceleratedWhileDisabled = true;
+      },
+    });
+
+    window.setTimeout(() => {}, 400);
+    expect(acceleratedWhileDisabled).toBe(false);
+  });
+
+  it('safely clamps speed multipliers <= 0 or extreme values', () => {
+    patchTimerAPIs({ speedMultiplier: 10 });
+    updateTimerHookOptions({ speedMultiplier: 0 });
+
+    let scaledValue = 0;
+    updateTimerHookOptions({
+      onAccelerate: (_, scaled) => {
+        scaledValue = scaled;
+      },
+    });
+
+    window.setTimeout(() => {}, 200);
+    // Multiplier 0 clamps to 1 -> not scaled (delay not scaled since multiplier <= 1)
+    expect(scaledValue).toBe(0);
+  });
 });
+

@@ -1,18 +1,25 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { patchVisibilityAPIs } from '../../src/core/hooks/visibility-hook';
+import {
+  patchVisibilityAPIs,
+  updateVisibilityHookOptions,
+} from '../../src/core/hooks/visibility-hook';
 
 describe('Visibility Hook Anti-Pause Spoofing', () => {
   let originalAddEventListener: typeof EventTarget.prototype.addEventListener;
+  let originalRemoveEventListener: typeof EventTarget.prototype.removeEventListener;
 
   beforeEach(() => {
     delete (window as any).__SKIP_AND_WAIT_VISIBILITY_PATCHED__;
     originalAddEventListener = EventTarget.prototype.addEventListener;
+    originalRemoveEventListener = EventTarget.prototype.removeEventListener;
   });
 
   afterEach(() => {
     EventTarget.prototype.addEventListener = originalAddEventListener;
+    EventTarget.prototype.removeEventListener = originalRemoveEventListener;
     delete (window as any).__SKIP_AND_WAIT_VISIBILITY_PATCHED__;
   });
+
 
   it('spoofs document.hidden to always be false', () => {
     patchVisibilityAPIs();
@@ -88,4 +95,33 @@ describe('Visibility Hook Anti-Pause Spoofing', () => {
     patchVisibilityAPIs();
     expect(EventTarget.prototype.addEventListener).toBe(patchedListener);
   });
+
+  it('correctly unregisters visibilitychange listeners with removeEventListener', () => {
+    patchVisibilityAPIs();
+
+    let count = 0;
+    const listener = () => {
+      count++;
+    };
+
+    document.addEventListener('visibilitychange', listener);
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(count).toBe(1);
+
+    document.removeEventListener('visibilitychange', listener);
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(count).toBe(1);
+  });
+
+  it('spoofs document.hasFocus() to return true when enabled and respects toggle', () => {
+    patchVisibilityAPIs();
+
+    expect(typeof document.hasFocus).toBe('function');
+    expect(document.hasFocus()).toBe(true);
+
+    updateVisibilityHookOptions(false);
+    // When disabled, calls underlying hasFocus
+    expect(typeof document.hasFocus()).toBe('boolean');
+  });
 });
+

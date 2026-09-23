@@ -182,4 +182,51 @@ describe('HeuristicSkipper Universal Countdown & Ad Bypasser', () => {
 
     skipper.stop();
   });
+
+  it('does NOT auto-click standard disabled form buttons lacking countdown or gate patterns', async () => {
+    const submitBtn = document.createElement('button');
+    submitBtn.setAttribute('disabled', 'true');
+    submitBtn.className = 'btn-primary';
+    submitBtn.textContent = 'Submit Order';
+    document.body.appendChild(submitBtn);
+
+    let clicked = false;
+    submitBtn.addEventListener('click', () => {
+      clicked = true;
+    });
+
+    const skipper = new HeuristicSkipper();
+    skipper.start();
+
+    // Wait past the 300ms window
+    await new Promise((r) => setTimeout(r, 350));
+
+    expect(clicked).toBe(false);
+    skipper.stop();
+  });
+
+  it('cancels scheduled click timeouts when stop() is called before timeout fires', async () => {
+    const button = document.createElement('button');
+    button.className = 'download-btn';
+    button.textContent = 'Wait 0s';
+    document.body.appendChild(button);
+
+    let clicked = false;
+    button.addEventListener('click', () => {
+      clicked = true;
+    });
+
+    const skipper = new HeuristicSkipper();
+    skipper.start();
+
+    // Stop early (after 50ms, before the 300ms timer completes)
+    await new Promise((r) => setTimeout(r, 50));
+    skipper.stop();
+
+    // Wait past the original 300ms mark
+    await new Promise((r) => setTimeout(r, 350));
+
+    expect(clicked).toBe(false);
+  });
 });
+

@@ -1,9 +1,24 @@
-export function showToast(message: string, durationMs = 2000) {
-  // Prevent duplicate toasts
+let activeDismissTimer: any = null;
+let activeFadeTimer: any = null;
+
+export function dismissToast() {
+  if (activeDismissTimer) {
+    clearTimeout(activeDismissTimer);
+    activeDismissTimer = null;
+  }
+  if (activeFadeTimer) {
+    clearTimeout(activeFadeTimer);
+    activeFadeTimer = null;
+  }
   const existing = document.getElementById('skip-and-wait-toast-container');
   if (existing) {
     existing.remove();
   }
+}
+
+export function showToast(message: string, durationMs = 2000) {
+  // Clear any existing toast and pending dismissal timers
+  dismissToast();
 
   const container = document.createElement('div');
   container.id = 'skip-and-wait-toast-container';
@@ -53,11 +68,14 @@ export function showToast(message: string, durationMs = 2000) {
   });
 
   // Fade out & cleanup
-  setTimeout(() => {
+  activeDismissTimer = setTimeout(() => {
     container.style.opacity = '0';
     container.style.transform = 'translateY(8px) scale(0.96)';
-    setTimeout(() => {
+    activeFadeTimer = setTimeout(() => {
       container.remove();
+      activeFadeTimer = null;
     }, 300);
+    activeDismissTimer = null;
   }, durationMs);
 }
+

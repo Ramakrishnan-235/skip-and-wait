@@ -36,6 +36,12 @@ describe('YouTube Redirect Guard & Auto-Return', () => {
       expect(isExemptReferrer('twitter.com')).toBe(true);
       expect(isExemptReferrer('x.com')).toBe(true);
       expect(isExemptReferrer('t.co')).toBe(true);
+      expect(isExemptReferrer('github.com')).toBe(true);
+      expect(isExemptReferrer('discord.com')).toBe(true);
+      expect(isExemptReferrer('slack.com')).toBe(true);
+      expect(isExemptReferrer('whatsapp.com')).toBe(true);
+      expect(isExemptReferrer('telegram.org')).toBe(true);
+      expect(isExemptReferrer('wikipedia.org')).toBe(true);
 
       expect(isExemptReferrer('shrinkme.io')).toBe(false);
       expect(isExemptReferrer('linkvertise.com')).toBe(false);

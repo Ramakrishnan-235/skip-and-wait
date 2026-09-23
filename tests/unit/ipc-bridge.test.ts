@@ -101,4 +101,45 @@ describe('IPCBridge Cross-World Communication', () => {
     await new Promise((r) => setTimeout(r, 20));
     expect(handler2Called).toBe(true);
   });
+
+  it('unregisters listener when invoking returned unsubscribe callback', async () => {
+    const mainBridge = new IPCBridge(true);
+    const isolatedBridge = new IPCBridge(false);
+
+    let callCount = 0;
+    const unsubscribe = isolatedBridge.on('TIMER_ACCELERATED', () => {
+      callCount++;
+    });
+
+    mainBridge.send('TIMER_ACCELERATED', { secondsSaved: 5 });
+    await new Promise((r) => setTimeout(r, 20));
+    expect(callCount).toBe(1);
+
+    unsubscribe();
+
+    mainBridge.send('TIMER_ACCELERATED', { secondsSaved: 10 });
+    await new Promise((r) => setTimeout(r, 20));
+    expect(callCount).toBe(1);
+  });
+
+  it('removes window message listener and clears handlers on destroy()', async () => {
+    const mainBridge = new IPCBridge(true);
+    const isolatedBridge = new IPCBridge(false);
+
+    let callCount = 0;
+    isolatedBridge.on('FORCE_SKIP', () => {
+      callCount++;
+    });
+
+    mainBridge.send('FORCE_SKIP');
+    await new Promise((r) => setTimeout(r, 20));
+    expect(callCount).toBe(1);
+
+    isolatedBridge.destroy();
+
+    mainBridge.send('FORCE_SKIP');
+    await new Promise((r) => setTimeout(r, 20));
+    expect(callCount).toBe(1);
+  });
 });
+

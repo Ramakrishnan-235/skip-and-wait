@@ -54,6 +54,11 @@ export default function App() {
     setSettings(updated);
   };
 
+  const handleSpeedChange = async (speed: number) => {
+    const updated = await saveSettings({ speedMultiplier: speed });
+    setSettings(updated);
+  };
+
   const isCurrentDomainWhitelisted = settings.whitelist.includes(currentDomain);
 
   const toggleCurrentSite = async () => {
@@ -271,7 +276,28 @@ export default function App() {
             <span className="slider" />
           </label>
         </div>
+
+        {/* Speed Multiplier Quick Selector */}
+        <div className="speed-selector-row">
+          <div className="speed-selector-label">
+            <Clock size={13} color="#94a3b8" />
+            <span>Speed Multiplier</span>
+          </div>
+          <div className="speed-pills">
+            {[2, 5, 10, 16].map((speed) => (
+              <button
+                key={speed}
+                type="button"
+                className={`speed-pill ${settings.speedMultiplier === speed ? 'active' : ''}`}
+                onClick={() => handleSpeedChange(speed)}
+              >
+                {speed}x
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
+
 
       {/* Footer */}
       <footer className="footer">

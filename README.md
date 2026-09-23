@@ -13,6 +13,7 @@
 - 👁️ **Universal Heuristic Skipper**: Lightweight MutationObserver scans for disabled countdown buttons ("Wait 10s...", "Download in 5s"), removes disabled states, and auto-clicks the button upon reaching 0s.
 - 📊 **Real-Time Dashboard & Stats**: Sleek dark-mode React popup dashboard tracking seconds saved today, lifetime time saved, total links bypassed, domain whitelist toggle, and an instant "Force Skip" button.
 - 🍞 **Non-Intrusive Glassmorphism Toast**: Discreet bottom-right pill notification displaying saved time (e.g. `⚡ Timer Accelerated (-10s)`).
+- ↩️ **YouTube Redirect Blocker & Auto-Return**: Detects when ad-shorteners or download gates unexpectedly redirect to YouTube, and automatically returns to the previous page with infinite-loop suppression.
 
 ---
 
